@@ -16,5 +16,5 @@ my job and in my free time.
   In this dashboard I took my data exploration a few steps further and visualized it in Tableau showing important summary information regarding infection and mortality globally. 
   To check out my dashboard please follow the link <a href = "https://public.tableau.com/app/profile/timothy.matthews.jr/viz/CovidPortfolioProject_17088121208280/Dashboard1"> here</a>. 
 
-### South Side of Chicago Foraging Locations
+### South Side of Chicago Foraging Project
   I did this project for fun and gathered the data from a site called FallingFruit.org. I've identified several sources of herbs, nuts, and fruits that can be foraged in Chicago's south side neighborhoods and leave the longitude and latitude for anyone looking to find each source of nutrients. The link to this project is available <a href = "https://public.tableau.com/app/profile/timothy.matthews.jr/viz/SouthSideChicagoForagingData/Accessibility"> here</a>. 
