@@ -15,6 +15,11 @@ This portfolio is a way to demonstrate my skills as a data analyst. Though I hav
   The Nashville housing dataset is a classic example set of data to show off data cleaning skills in SQL. Here I was able to combine Excel with SQL Server to comb through the data, clean it, and format it so that
   it's ready for a detailed and insightful analysis. You can see how I did all this right<a href = "https://github.com/timguy1997/Portfolio-Projects/blob/main/sql/Finished%20NashvilleHousing%20Data%20Cleaning%20Project%203-02-2024.sql"> here</a>.
 
+### MYSQL Data Analysis of Contrived Hospital Dataset
+   In this first SQL script I explore emergency room throughput, hospital demographics, and blood pressure data to draw insight about a fabricated hospital dataset. Having no access to pertinent and sensitive information, I believe being able to showcase my ability to gain insights is the next best thing. You can take it a look at it<a href = "https://github.com/tmatthewsjr97/Portfolio-Projects/blob/main/sql/Healthcare%20SQL%20Analysis%20I"> here</a>.
+
+I then went on to explore cost of care and different aspects of hospital procedures in my next script. These were both a continuation of the same EDA, but I split them up to make them somewhat more presentable. You can look at part II <a href = "https://github.com/tmatthewsjr97/Portfolio-Projects/blob/main/sql/Healthcare%20SQL%20Analysis%20II"> here</a>.
+
 
 ## Tableau Visualizations and Dashboards
 ------------------------------------------------------
