@@ -1,0 +1,258 @@
+-- THIS FIRST SECTION DEALS WITH ER THROUGHPUT DATA--
+
+
+
+--How many emergency encounters did we have in 2019?
+
+SELECT * FROM HEALTHCARE.ENCOUNTERS
+WHERE START >= '2019-01-01' AND
+		START < '2020-01-01' AND
+        ENCOUNTERCLASS = 'emergency'
+
+-- What conditions were treated in those encounters?
+
+SELECT CON.DESCRIPTION, COUNT(*)
+FROM HEALTHCARE.ENCOUNTERS ENC
+LEFT JOIN HEALTHCARE.CONDITIONS CON 
+ON ENC.ID = CON.ENCOUNTER
+WHERE ENC.START >= '2019-01-01' AND
+		ENC.START < '2020-01-01' AND
+        ENC.ENCOUNTERCLASS = 'emergency'
+GROUP BY CON.DESCRIPTION
+
+SELECT *
+FROM HEALTHCARE.ENCOUNTERS ENC
+LEFT JOIN HEALTHCARE.CONDITIONS CON 
+ON ENC.ID = CON.ENCOUNTER
+WHERE ENC.START >= '2019-01-01' AND
+		ENC.START < '2020-01-01' AND
+        ENC.ENCOUNTERCLASS = 'emergency'
+
+
+-- What was the emergency throughput and how did that vary by condition treated? 
+SELECT ID, THROUGHPUT_MINUTES
+FROM(
+SELECT *, TIMESTAMPDIFF(MINUTE, START, STOP) THROUGHPUT_MINUTES
+FROM HEALTHCARE.ENCOUNTERS
+WHERE START >= '2019-01-01' AND
+		START < '2020-01-01' AND
+        ENCOUNTERCLASS = 'emergency') THROUGHPUT
+
+SELECT THROUGHPUT.DESCRIPTION, FLOOR(AVG(THROUGHPUT_MINUTES))
+FROM(
+SELECT ENC.ID, CON.DESCRIPTION, TIMESTAMPDIFF(MINUTE, ENC.START, ENC.STOP) THROUGHPUT_MINUTES
+FROM HEALTHCARE.ENCOUNTERS ENC
+LEFT JOIN HEALTHCARE.CONDITIONS CON
+ON ENC.ID = CON.ENCOUNTER
+WHERE ENC.START >= '2019-01-01' AND
+		ENC.START < '2020-01-01' AND
+        ENC.ENCOUNTERCLASS = 'emergency') THROUGHPUT
+		GROUP BY THROUGHPUT.DESCRIPTION
+
+
+
+
+-- NOW BEGINS HOSPITAL DEMOGRAPHIC DATA--
+
+
+
+Select *
+From healthcare.encounters
+
+--What is our patient mix by gender, race, and ethnicity?
+Select GENDER,Count(*)
+From Healthcare.patients
+Group By GENDER
+
+Select Race,Count(*)
+From Healthcare.patients
+Group By Race
+
+Select GENDER, RACE, ETHNICITY, Count(*)
+From Healthcare.patients
+Group By GENDER, RACE, ETHNICITY
+
+-- What about patient age?
+
+Select ID, BIRTHDATE, FLOOR(DATEDIFF(curdate(), BIRTHDATE)/365.25) AS AGE
+From healthcare.patients
+
+-- How many states and zip codes do we treats patients from?
+
+Select *
+From healthcare.patients
+
+Select distinct(STATE)
+From healthcare.patients
+
+Select DISTINCT(ZIP), COUNT(*)
+From healthcare.patients
+Group By ZIP
+-- Which state, zip, and county do we treat the most patients from?
+
+Select DISTINCT(COUNTY), COUNT(*)
+From healthcare.patients
+Group By COUNTY
+
+-- What is our patient mix for patients who had an inpatient encounter in 2019?
+
+Select *
+From healthcare.encounters AS ENC
+Join healthcare.patients AS PAT
+On ENC.PATIENT =PAT.ID
+Where START >= '2019-01-01' AND
+	  START <= '2020-01-01' AND 
+      ENCOUNTERCLASS =  'inpatient'
+
+
+Select RACE, ETHNICITY, GENDER, Count(*)
+From healthcare.encounters AS ENC
+Join healthcare.patients AS PAT
+On ENC.PATIENT =PAT.ID
+Where START >= '2019-01-01' AND
+	  START <= '2020-01-01' AND 
+      ENCOUNTERCLASS =  'inpatient'
+Group By RACE, ETHNICITY, GENDER
+
+
+
+
+--THIS NEXT SECTION DEALS WITH BLOOD PRESSURE DATA AND DEMOGRAPHICS THAT GO ALONG WITH IT-- 
+
+
+
+
+
+
+
+HOW MANY PATIENTS HAD DOCUMENTED UNCONTROLLED HYPERTENSION AT ANY TIME IN 2018 OR 2019?
+
+SELECT DISTINCT DESCRIPTION, COUNT(*) AS VOLUMES
+FROM HEALTHCARE.OBSERVATIONS
+WHERE DESCRIPTION LIKE '%PRESSURE'
+GROUP BY DESCRIPTION
+	-- 
+SELECT DISTINCT PATIENT
+FROM HEALTHCARE.OBSERVATIONS
+WHERE DESCRIPTION IN ('DIASTOLIC BLOOD PRESSURE', 'SYSTOLIC BLOOD PRESSURE')
+AND ((DESCRIPTION = 'DIASTOLIC BLOOD PRESSURE' AND VALUE > 90) OR
+(DESCRIPTION = 'SYSTOLIC BLOOD PRESSURE' AND VALUE >140))
+AND DATE >= '2018-01-01'
+AND DATE < '2020-01-01'
+
+-- WHICH PROVIDERS TREATED PATIENTS WITH UNCONTROLLED HYPERTENSION IN 2018 AND 2019?
+
+SELECT DISTINCT OBS.PATIENT, PRO.NAME
+FROM HEALTHCARE.OBSERVATIONS OBS
+JOIN HEALTHCARE.ENCOUNTERS ENC
+ON OBS.ENCOUNTER = ENC.ID
+JOIN HEALTHCARE.PROVIDERS PRO
+ON ENC.PROVIDER = PRO.ID
+WHERE ((OBS.DESCRIPTION = 'DIASTOLIC BLOOD PRESSURE' AND VALUE > 90) OR
+(OBS.DESCRIPTION = 'SYSTOLIC BLOOD PRESSURE' AND VALUE >140))
+AND OBS.DATE >= '2018-01-01'
+AND OBS.DATE < '2020-01-01'
+
+
+-- WHAT MEDICATIONS WERE GIVEN TO PATIENTS WITH UNCONTROLLED HYPERTENSION?
+SELECT * FROM HEALTHCARE.MEDICATIONS
+
+SELECT DISTINCT OBS.PATIENT, MED.DESCRIPTION AS MEDICATION
+FROM HEALTHCARE.OBSERVATIONS OBS
+JOIN HEALTHCARE.MEDICATIONS MED
+ON OBS.PATIENT = MED.PATIENT
+	AND MED.START >= OBS.DATE
+WHERE ((OBS.DESCRIPTION = 'DIASTOLIC BLOOD PRESSURE' AND VALUE > 90) OR
+(OBS.DESCRIPTION = 'SYSTOLIC BLOOD PRESSURE' AND VALUE >140))
+AND OBS.DATE >= '2018-01-01'
+AND OBS.DATE < '2020-01-01'
+
+------------------------------------------
+
+--  If we used a lower cut off of 135/85 for hypertension than the 140/90, how many patients would have been documented hypertension at any time across 2018 or 2019?
+
+SELECT DISTINCT PATIENT
+FROM HEALTHCARE.OBSERVATIONS
+WHERE DESCRIPTION IN ('DIASTOLIC BLOOD PRESSURE', 'SYSTOLIC BLOOD PRESSURE')
+AND ((DESCRIPTION = 'DIASTOLIC BLOOD PRESSURE' AND VALUE > 85) OR
+(DESCRIPTION = 'SYSTOLIC BLOOD PRESSURE' AND VALUE >135))
+AND DATE >= '2018-01-01'
+AND DATE < '2020-01-01'
+ 
+ -- ANSWER: 104
+ 
+-- What was the most commonly prescribed medication to the patients with hypertension (as identified as having a BP over 140/90 at any point in 2018 or 2019)?
+
+SELECT MED.DESCRIPTION, COUNT(*)
+FROM HEALTHCARE.OBSERVATIONS OBS
+JOIN HEALTHCARE.MEDICATIONS MED
+ON OBS.PATIENT = MED.PATIENT
+WHERE OBS.DESCRIPTION IN ('DIASTOLIC BLOOD PRESSURE', 'SYSTOLIC BLOOD PRESSURE')
+AND ((OBS.DESCRIPTION = 'DIASTOLIC BLOOD PRESSURE' AND VALUE > 90) OR
+(OBS.DESCRIPTION = 'SYSTOLIC BLOOD PRESSURE' AND VALUE >140))
+AND OBS.DATE >= '2018-01-01'
+AND OBS.DATE < '2020-01-01'
+GROUP BY MED.DESCRIPTION
+
+-- ANSWER: amLODIPine 5 MG / Hydrochlorothiazide 12.5 MG / Olmesartan medoxomil 20 MG Oral Tablet
+
+-- Which race (in this data set) had the highest total number of patients with a BP of 140/90 before 2020?
+
+SELECT PAT.RACE, COUNT(*)
+FROM HEALTHCARE.OBSERVATIONS OBS
+JOIN HEALTHCARE.PATIENTS PAT
+ON OBS.PATIENT = PAT.ID
+WHERE OBS.DESCRIPTION IN ('DIASTOLIC BLOOD PRESSURE', 'SYSTOLIC BLOOD PRESSURE')
+AND ((OBS.DESCRIPTION = 'DIASTOLIC BLOOD PRESSURE' AND VALUE > 90) OR
+(OBS.DESCRIPTION = 'SYSTOLIC BLOOD PRESSURE' AND VALUE >140))
+AND OBS.DATE < '2020-01-01'
+GROUP BY PAT.RACE
+
+-- ANSWER: WHITE
+
+-- Which race (in this training data set) had the highest percentage of blood pressure readings that were above 140/90 and taken before 2020?
+SELECT TOTAL_BPS.RACE
+,TOTAL_BPS.TOTAL_BP_READINGS
+,POSITIVE_BPS.TOTAL_HIGH_BP_READINGS
+,100*(POSITIVE_BPS.TOTAL_HIGH_BP_READINGS/TOTAL_BP_READINGS) AS PERCENT_HIGH_BPS
+FROM
+							(
+								-- determine total number of BP readings done by race
+									SELECT PAT.RACE
+									,COUNT(*) / 2 AS TOTAL_BP_READINGS -- we divide by two because otherwise we'd be counting readings double (due to us getting one row per diastolic and one row per systolic
+									FROM HEALTHCARE.OBSERVATIONS  BP
+									JOIN HEALTHCARE.PATIENTS PAT ON BP.PATIENT=PAT.ID
+									WHERE 
+													(
+													
+														(DESCRIPTION = 'Diastolic Blood Pressure' )
+															OR (DESCRIPTION = 'Systolic Blood Pressure' )
+													
+													)
+													
+												   AND  DATE<'2020-01-01'
+													GROUP BY PAT.RACE
+                                ) TOTAL_BPS
+
+LEFT JOIN 		(
+							-- determine number of BP readings where we have high blood pressure documented
+								SELECT PAT.RACE
+								,COUNT(*)/2 AS TOTAL_HIGH_BP_READINGS
+								FROM HEALTHCARE.OBSERVATIONS  BP
+								JOIN HEALTHCARE.PATIENTS PAT ON BP.PATIENT=PAT.ID
+								WHERE 
+												(
+												
+													(DESCRIPTION = 'Diastolic Blood Pressure' AND VALUE>90)
+														OR (DESCRIPTION = 'Systolic Blood Pressure' AND VALUE>140)
+												
+												)
+												
+											   AND  DATE<'2020-01-01'
+												GROUP BY PAT.RACE
+							) POSITIVE_BPS ON TOTAL_BPS.RACE=POSITIVE_BPS.RACE
+		;
+        
+        -- ANSWER: BLACK
+
+
